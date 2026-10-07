@@ -2,3 +2,4 @@
 torch==2.14.1+cu132
 torchvision==0.29.1+cu132
 matplotlib==3.11.2
+numpy==2.5.2
