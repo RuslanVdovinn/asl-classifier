@@ -48,9 +48,16 @@ def get_transforms(
         # RGB, 3 канала, ImageNet нормализация
         train_t = transforms.Compose(
             [
-                transforms.Resize((img_size, img_size)),
-                transforms.RandomAffine(15, translate=(0.1, 0.1), scale=(0.9, 1.1)),
-                transforms.ColorJitter(brightness=0.2, contrast=0.2),
+                transforms.Resize((img_size + crop_padding, img_size + crop_padding)),
+                # Убираем рамку и оставляем запас для аугментаций
+                transforms.CenterCrop(img_size + 10),  # 220 → 210
+                transforms.RandomAffine(
+                    degrees=15, translate=(0.05, 0.05), scale=(0.9, 1.1), fill=127
+                ),
+                transforms.CenterCrop(img_size),  # 210 → 200
+                transforms.ColorJitter(
+                    brightness=0.2, contrast=0.2, saturation=0.2, hue=0.05
+                ),
                 transforms.ToTensor(),
                 transforms.Normalize(
                     mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
@@ -59,7 +66,9 @@ def get_transforms(
         )
         val_t = transforms.Compose(
             [
-                transforms.Resize((img_size, img_size)),
+                transforms.Resize((img_size + crop_padding, img_size + crop_padding)),
+                transforms.CenterCrop(img_size),  # 220 → 200 (убираем рамку)
+                transforms.CenterCrop(img_size),
                 transforms.ToTensor(),
                 transforms.Normalize(
                     mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
