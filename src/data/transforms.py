@@ -68,7 +68,6 @@ def get_transforms(
             [
                 transforms.Resize((img_size + crop_padding, img_size + crop_padding)),
                 transforms.CenterCrop(img_size),  # 220 → 200 (убираем рамку)
-                transforms.CenterCrop(img_size),
                 transforms.ToTensor(),
                 transforms.Normalize(
                     mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
