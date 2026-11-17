@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>ASL Recognition — 3 модели</title>
+    <style>
+        body { font-family: sans-serif; max-width: 640px; margin: 40px auto; }
+        .result { margin-top: 20px; padding: 15px; background: #f0f8ff; border-radius: 8px; }
+        .model-info { font-size: 0.9em; color: #666; }
+        select, input, button { font-size: 1em; padding: 6px; margin: 4px 0; }
+    </style>
+</head>
+<body>
+    <h1>Распознавание жестов ASL</h1>
+    <p>Загрузите изображение руки (JPG/PNG, до 5 МБ).</p>
+    
+    <form id="uploadForm">
+        <label>Модель:
+            <select name="model" id="modelSelect">
+                {% for m in models %}
+                <option value="{{ m.name }}" {% if m.name == default %}selected{% endif %}>
+                    {{ m.label }} — {{ m.test_acc }} ({{ m.params }})
+                </option>
+                {% endfor %}
+            </select>
+        </label>
+        <div class="model-info" id="modelInfo"></div>
+        <br>
+        <input type="file" name="file" accept=".jpg,.jpeg,.png" required>
+        <button type="submit">Распознать</button>
+    </form>
+    
+    <div id="result" class="result" style="display:none;"></div>
+
+    <script>
+        document.getElementById("uploadForm").onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const resp = await fetch("/predict", { method: "POST", body: formData });
+            const data = await resp.json();
+            const div = document.getElementById("result");
+            div.style.display = "block";
+            if (data.success) {
+                div.innerHTML = `<strong>Модель:</strong> ${data.model}<br>
+                    <strong>Результат:</strong> ${data.prediction} 
+                    (уверенность: ${(data.confidence*100).toFixed(2)}%)<br>
+                    <small>Top-3: ${data.top3.map(t => `${t.class} — ${(t.probability*100).toFixed(1)}%`).join(", ")}</small>`;
+            } else {
+                div.textContent = "Ошибка: " + data.error;
+            }
+        };
+    </script>
+</body>
+</html>
