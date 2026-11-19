@@ -1,15 +1,13 @@
-import os
 import traceback
 
 from flask import Flask, jsonify, render_template, request
 
-from config import Config
-from inference.inference import predict
-from model_registry import load_all_models
+from .config import Config
+from .inference.inference import predict
+from .model_registry import load_all_models
 
 app = Flask(__name__)
 app.config.from_object(Config)
-os.makedirs(Config.UPLOAD_FOLDER, exist_ok=True)
 
 MODELS = load_all_models()
 

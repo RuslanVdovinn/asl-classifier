@@ -1,4 +1,8 @@
+from pathlib import Path
+
 import torch
+
+BASE_DIR = Path(__file__).resolve().parents[1]
 
 
 class Config:
@@ -41,7 +45,7 @@ class Config:
 
     MODELS = {  # noqa: RUF012
         "simplecnn": {
-            "path": "../models/simple_cnn_best.pth",
+            "path": f"{BASE_DIR}/models/simple_cnn_best.pth",
             "label": "SimpleCNN (baseline)",
             "params": "96K",
             "test_acc": "96.28%",
@@ -49,7 +53,7 @@ class Config:
             "std": 0.2424,
         },
         "resnet18": {
-            "path": "../models/resnet18_finetuned.pth",
+            "path": f"{BASE_DIR}/models/resnet18_finetuned.pth",
             "label": "ResNet18 (Fine-tuned)",
             "params": "11.2M",
             "test_acc": "99.98%",
@@ -57,7 +61,7 @@ class Config:
             "std": [0.229, 0.224, 0.225],
         },
         "efficientnet": {
-            "path": "../models/efficientnet_finetuned.pth",
+            "path": f"{BASE_DIR}/models/efficientnet_finetuned.pth",
             "label": "EfficientNet-B0 (Fine-tuned)",
             "params": "4.0M",
             "test_acc": "99.98%",
@@ -68,6 +72,5 @@ class Config:
 
     DEFAULT_MODEL = "efficientnet"
 
-    UPLOAD_FOLDER = "uploads"
     MAX_CONTENT_LENGTH = 5 * 1024 * 1024
     ALLOWED_EXTENSIONS = ("jpg", "jpeg", "png")

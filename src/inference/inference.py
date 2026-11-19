@@ -4,8 +4,8 @@ import torch
 import torch.nn.functional as F
 from PIL import Image
 
-from config import Config
-from data.transforms import get_transforms
+from ..config import Config
+from ..data.transforms import get_transforms
 
 transforms = {
     "simplecnn": get_transforms(

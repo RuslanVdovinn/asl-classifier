@@ -2,8 +2,8 @@ import torch
 from torch import nn
 from torchvision import models
 
-from config import Config
-from models.simple_cnn import SimpleCNN
+from .config import Config
+from .models.simple_cnn import SimpleCNN
 
 
 def build_resnet18(num_classes=29):
