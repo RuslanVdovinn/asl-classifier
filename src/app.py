@@ -4,12 +4,11 @@ from flask import Flask, jsonify, render_template, request
 
 from .config import Config
 from .inference.inference import predict
-from .model_registry import load_all_models
+from .model_registry import ModelStore
 
 app = Flask(__name__)
 app.config.from_object(Config)
-
-MODELS = load_all_models()
+app.extensions["model_store"] = ModelStore()
 
 
 def allowed_file(filename):
@@ -39,14 +38,13 @@ def predict_endpoint():
         return jsonify({"error": "Разрешены только JPG/PNG"}), 400
 
     model_name = request.form.get("model", Config.DEFAULT_MODEL)
-    if model_name not in MODELS:
+    if model_name not in Config.MODELS:
         return jsonify({"error": f"Неизвестная модель: {model_name}"}), 400
 
     try:
         image_bytes = file.read()
-        class_name, confidence, top3 = predict(
-            image_bytes, MODELS[model_name], model_name
-        )
+        model = app.extensions["model_store"].get(model_name)
+        class_name, confidence, top3 = predict(image_bytes, model, model_name)
         return jsonify(
             {
                 "success": True,

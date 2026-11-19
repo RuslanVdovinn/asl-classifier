@@ -1,9 +1,15 @@
+import threading
+
 import torch
 from torch import nn
 from torchvision import models
 
 from .config import Config
 from .models.simple_cnn import SimpleCNN
+
+
+class ModelLoadError(RuntimeError):
+    pass
 
 
 def build_resnet18(num_classes=29):
@@ -26,21 +32,41 @@ BUILDERS = {
 }
 
 
-def load_all_models():
-    loaded = {}
-    for name, meta in Config.MODELS.items():
-        builder = BUILDERS[name]
-        model = builder(Config.NUM_CLASSES)
+def load_model(name: str):
+    meta = Config.MODELS[name]
+    model = BUILDERS[name](Config.NUM_CLASSES)
 
+    try:
         checkpoint = torch.load(
             meta["path"], map_location=Config.DEVICE, weights_only=False
         )
         model.load_state_dict(checkpoint["model_state_dict"])
-        model = model.to(Config.DEVICE).eval()
+    except FileNotFoundError as exc:
+        raise ModelLoadError(
+            f"Веса модели '{name}' не найдены: {meta['path']}"
+        ) from exc
+    except Exception as exc:
+        raise ModelLoadError(f"Не удалось загрузить модель '{name}': {exc}") from exc
 
-        loaded[name] = model
-        print(
-            f"Загружена модель '{name}' ({meta['label']}), "
-            f"params={meta['params']}, test_acc={meta['test_acc']}"
-        )
-    return loaded
+    print(f"Загружена модель '{name}' ({meta['label']})")
+    return model.to(Config.DEVICE).eval()
+
+
+class ModelStore:
+    def __init__(self, loader=load_model):
+        self._loader = loader
+        self._models = {}
+        self._lock = threading.Lock()
+
+    def get(self, name: str):
+        model = self._models.get(name)
+        if model is not None:
+            return model
+
+        with self._lock:
+            model = self._models.get(name)
+            if model is None:
+                model = self._loader(name)
+                self._models[name] = model
+
+        return model
