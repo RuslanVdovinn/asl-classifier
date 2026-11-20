@@ -38,7 +38,7 @@ def load_model(name: str):
 
     try:
         checkpoint = torch.load(
-            meta["path"], map_location=Config.DEVICE, weights_only=False
+            meta["path"], map_location=Config.DEVICE, weights_only=True
         )
         model.load_state_dict(checkpoint["model_state_dict"])
     except FileNotFoundError as exc:

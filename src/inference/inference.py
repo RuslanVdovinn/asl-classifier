@@ -2,7 +2,7 @@ import io
 
 import torch
 import torch.nn.functional as F
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 
 from ..config import Config
 from ..data.transforms import get_transforms
@@ -20,7 +20,10 @@ transforms = {
 
 
 def predict(image_bytes: bytes, model, model_name):
-    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    try:
+        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    except (UnidentifiedImageError, OSError) as e:
+        raise ValueError(f"Не удалось открыть изображение: {e}")
     tensor = transforms[model_name](image).unsqueeze(0).to(Config.DEVICE)
 
     with torch.no_grad():
