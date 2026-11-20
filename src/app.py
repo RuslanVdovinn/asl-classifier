@@ -1,3 +1,4 @@
+import sys
 import traceback
 
 from flask import Flask, jsonify, render_template, request
@@ -5,6 +6,8 @@ from flask import Flask, jsonify, render_template, request
 from .config import Config
 from .inference.inference import predict
 from .model_registry import ModelStore
+
+DEBUG = "--debug" in sys.argv
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -60,4 +63,4 @@ def predict_endpoint():
 
 
 if __name__ == "__main__":
-    app.run(port=5000, debug=True)
+    app.run(port=5000, debug=DEBUG)
