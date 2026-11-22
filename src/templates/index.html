@@ -19,7 +19,7 @@
             <select name="model" id="modelSelect">
                 {% for m in models %}
                 <option value="{{ m.name }}" {% if m.name == default %}selected{% endif %}>
-                    {{ m.label }} — {{ m.test_acc }} ({{ m.params }})
+                    {{ m.label }}{% if m.metrics %} — acc {{ "%.1f"|format(m.metrics.accuracy * 100) }}%, F1 {{ "%.3f"|format(m.metrics.macro_f1) }}{% else %} — нет оценки{% endif %} ({{ m.params }})
                 </option>
                 {% endfor %}
             </select>

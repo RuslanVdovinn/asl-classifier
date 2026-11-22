@@ -1,7 +1,9 @@
+import json
 import logging
 import sys
 import time
 import traceback
+from pathlib import Path
 
 from flask import Flask, jsonify, render_template, request
 
@@ -21,6 +23,19 @@ app = Flask(__name__)
 app.config.from_object(Config)
 app.extensions["model_store"] = ModelStore()
 
+METRICS_PATH = Path(__file__).resolve().parents[1] / "reports" / "metrics.json"
+
+
+def load_metrics():
+    try:
+        data = json.loads(METRICS_PATH.read_text(encoding="utf-8"))
+        return data.get("models", {})
+    except FileNotFoundError:
+        return {}
+    except (OSError, json.JSONDecodeError):
+        logger.warning("Не удалось прочитать метрики: %s", METRICS_PATH, exc_info=True)
+        return {}
+
 
 def allowed_file(filename):
     return (
@@ -31,7 +46,11 @@ def allowed_file(filename):
 
 @app.route("/")
 def index():
-    models_meta = [{"name": k, **v} for k, v in Config.MODELS.items()]
+    metrics = load_metrics()
+    models_meta = [
+        {"name": k, **v, "metrics": metrics.get(k)}
+        for k, v in Config.MODELS.items()
+    ]
     return render_template(
         "index.html", models=models_meta, default=Config.DEFAULT_MODEL
     )
