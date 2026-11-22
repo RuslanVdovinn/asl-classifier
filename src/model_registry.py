@@ -1,10 +1,13 @@
 import threading
+from collections.abc import Callable
+from dataclasses import dataclass
 
 import torch
 from torch import nn
 from torchvision import models
 
 from .config import Config
+from .data.transforms import get_transforms
 from .models.simple_cnn import SimpleCNN
 
 
@@ -31,8 +34,19 @@ BUILDERS = {
     "efficientnet": build_efficientnet_b0,
 }
 
+if set(BUILDERS) != set(Config.MODELS):
+    raise RuntimeError("BUILDERS и Config.MODELS расходятся")
 
-def load_model(name: str):
+
+@dataclass(frozen=True)
+class LoadedModel:
+    name: str
+    model: nn.Module
+    transform: Callable
+    class_names: tuple[str, ...]
+
+
+def load_model(name: str) -> LoadedModel:
     meta = Config.MODELS[name]
     model = BUILDERS[name](Config.NUM_CLASSES)
 
@@ -48,8 +62,20 @@ def load_model(name: str):
     except Exception as exc:
         raise ModelLoadError(f"Не удалось загрузить модель '{name}': {exc}") from exc
 
+    transform = get_transforms(
+        model_type=meta["transform"],
+        img_size=meta["img_size"],
+        mean=meta["mean"],
+        std=meta["std"],
+    )[1]
+
     print(f"Загружена модель '{name}' ({meta['label']})")
-    return model.to(Config.DEVICE).eval()
+    return LoadedModel(
+        name=name,
+        model=model.to(Config.DEVICE).eval(),
+        transform=transform,
+        class_names=Config.CLASS_NAMES,
+    )
 
 
 class ModelStore:
@@ -58,7 +84,7 @@ class ModelStore:
         self._models = {}
         self._lock = threading.Lock()
 
-    def get(self, name: str):
+    def get(self, name: str) -> LoadedModel:
         model = self._models.get(name)
         if model is not None:
             return model

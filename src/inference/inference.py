@@ -5,29 +5,19 @@ import torch.nn.functional as F
 from PIL import Image, UnidentifiedImageError
 
 from ..config import Config
-from ..data.transforms import get_transforms
-
-transforms = {
-    "simplecnn": get_transforms(
-        model_type="simple_cnn",
-        img_size=Config.IMG_SIZE,
-        mean=Config.MODELS["simplecnn"]["mean"],
-        std=Config.MODELS["simplecnn"]["std"],
-    )[1],
-    "resnet18": get_transforms(model_type="resnet")[1],
-    "efficientnet": get_transforms(model_type="efficientnet")[1],
-}
+from ..model_registry import LoadedModel
 
 
-def predict(image_bytes: bytes, model, model_name):
+def predict(image_bytes: bytes, loaded: LoadedModel):
     try:
         image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     except (UnidentifiedImageError, OSError) as e:
         raise ValueError(f"Не удалось открыть изображение: {e}")
-    tensor = transforms[model_name](image).unsqueeze(0).to(Config.DEVICE)
+
+    tensor = loaded.transform(image).unsqueeze(0).to(Config.DEVICE)
 
     with torch.no_grad():
-        outputs = model(tensor)
+        outputs = loaded.model(tensor)
         probs = F.softmax(outputs, dim=1)
 
     top3_prob, top3_idx = torch.topk(probs, k=3, dim=1)
@@ -35,7 +25,7 @@ def predict(image_bytes: bytes, model, model_name):
     top3_idx = top3_idx.cpu().numpy()[0]
 
     results = [
-        {"class": Config.CLASS_NAMES[idx], "probability": float(prob)}
+        {"class": loaded.class_names[idx], "probability": float(prob)}
         for idx, prob in zip(top3_idx, top3_prob)
     ]
     return results[0]["class"], results[0]["probability"], results

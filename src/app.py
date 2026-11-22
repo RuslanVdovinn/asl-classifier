@@ -71,9 +71,9 @@ def predict_endpoint():
 
     try:
         image_bytes = file.read()
-        model = app.extensions["model_store"].get(model_name)
+        loaded = app.extensions["model_store"].get(model_name)
         t_infer = time.perf_counter()
-        class_name, confidence, top3 = predict(image_bytes, model, model_name)
+        class_name, confidence, top3 = predict(image_bytes, loaded)
         infer_ms = (time.perf_counter() - t_infer) * 1000
     except Exception as e:
         logger.exception(f"Ошибка инференса (модель={model_name})")

@@ -41,12 +41,12 @@ class Config:
         "space",
     )
 
-    IMG_SIZE = 200
-
     MODELS = {  # noqa: RUF012
         "simplecnn": {
             "path": f"{BASE_DIR}/models/simple_cnn_best.pth",
             "label": "SimpleCNN (baseline)",
+            "transform": "simple_cnn",
+            "img_size": 200,
             "params": "96K",
             "test_acc": "96.28%",
             "mean": 0.5068,
@@ -55,6 +55,8 @@ class Config:
         "resnet18": {
             "path": f"{BASE_DIR}/models/resnet18_finetuned.pth",
             "label": "ResNet18 (Fine-tuned)",
+            "transform": "resnet",
+            "img_size": 224,
             "params": "11.2M",
             "test_acc": "99.98%",
             "mean": [0.485, 0.456, 0.406],
@@ -63,6 +65,8 @@ class Config:
         "efficientnet": {
             "path": f"{BASE_DIR}/models/efficientnet_finetuned.pth",
             "label": "EfficientNet-B0 (Fine-tuned)",
+            "transform": "efficientnet",
+            "img_size": 224,
             "params": "4.0M",
             "test_acc": "99.98%",
             "mean": [0.485, 0.456, 0.406],
